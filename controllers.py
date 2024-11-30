@@ -2,20 +2,35 @@ from flask import jsonify, request
 
 from exceptions import NotFoundError, MissingDataError
 from extensions import app
-from mappers import UserMapper
+from mappers import UserMapper, PostMapper
 from models import db, Post
-from repos import UserRepos
-from serializers import UserJsonSerializer, ErrorJsonSerializer
-from services import UserService
+from repos import UserRepos, PostRepos
+from serializers import UserJsonSerializer, ErrorJsonSerializer, PostJsonSerializer
+from services import UserService, PostService
 
 user_repos = UserRepos()
 user_mapper = UserMapper()
 user_service = UserService(user_repos, user_mapper)
 user_serializer = UserJsonSerializer()
+
 error_serializer = ErrorJsonSerializer()
+
+post_repos = PostRepos()
+post_mapper = PostMapper()
+post_service = PostService(post_repos,post_mapper)
+post_serializer = PostJsonSerializer()
 
 
 class UserController:
+
+    @staticmethod
+    @app.route('/users/<int:user_id>/posts', methods=['GET'])
+    def get_user_posts(user_id):
+        try:
+            posts = post_service.get_by_user_id(user_id)
+            return post_serializer.serialize_post_get_dtos(posts)
+        except NotFoundError as e:
+            return error_serializer.serialize_error_message(e), 404
 
     @staticmethod
     @app.route('/users', methods=['GET'])
@@ -64,26 +79,49 @@ class UserController:
             return error_serializer.serialize_error_message(e), 404
 
 class PostsController:
+
     @staticmethod
     @app.route('/posts', methods=['GET'])
     def get_posts():
-        posts = Post.query.all()
-        return jsonify([{'id': post.id, 'title': post.title, 'content': post.content} for post in posts])
+        try:
+            return post_serializer.serialize_post_get_dtos(post_service.get_all())
+        except NotFoundError as e:
+            return error_serializer.serialize_error_message(e)
+
+    @staticmethod
+    @app.route('/posts/<int:post_id>', methods=['GET'])
+    def get_post(post_id):
+        try:
+            post = post_service.get(post_id)
+            return post_serializer.serialize_post_get_dto(post)
+        except NotFoundError as e:
+            return error_serializer.serialize_error_message(e), 404
 
     @staticmethod
     @app.route('/posts', methods=['POST'])
     def create_post():
-        data = request.get_json()
-        title = data.get('title')
-        content = data.get('content')
-        user_id = data.get('user_id')
+        try:
+            data = request.get_json()
+            return post_serializer.serialize_post_get_dto(post_service.create(post_serializer.deserialize_post_create_dto(data)))
+        except MissingDataError as e:
+            return error_serializer.serialize_error_message(e)
 
+    @staticmethod
+    @app.route('/posts/<int:post_id>', methods=['PUT'])
+    def update_post(post_id):
+        try:
+            data = request.get_json()
+            new_post = post_serializer.deserialize_post_create_dto(data)
+            return post_serializer.serialize_post_get_dto(post_service.update(post_id, new_post))
+        except MissingDataError as e:
+            return error_serializer.serialize_error_message(e), 400
+        except NotFoundError as e:
+            return error_serializer.serialize_error_message(e), 404
 
-
-        if not title or not content:
-            return jsonify({"message": "Name and age are required"}), 400
-
-        new_post = Post(title=title, content=content, user_id=user_id)
-        db.session.add(new_post)
-        db.session.commit()
-        return jsonify({'id': new_post.id, 'title': new_post.title, 'content': new_post.content}), 201
+    @staticmethod
+    @app.route('/posts/<int:post_id>', methods=['DELETE'])
+    def delete_post(post_id):
+        try:
+            return post_serializer.serialize_post_get_dto(post_service.delete(post_id))
+        except NotFoundError as e:
+            return error_serializer.serialize_error_message(e), 404

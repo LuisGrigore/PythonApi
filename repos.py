@@ -70,3 +70,6 @@ class PostRepos(CrudRepos):
         post.content = new_post.content
         db.session.commit()
         return post
+
+    def get_by_user_id(self, user_id):
+        return Post.query.filter_by(user_id=user_id).all()

@@ -63,30 +63,33 @@ class PostService(CrudService):
         self.post_mapper = post_mapper
 
     def get_all(self):
-        users = self.post_repos.get_all()
-        if not users:
+        posts = self.post_repos.get_all()
+        if not posts:
             raise NotFoundError(NO_POSTS_FOUND)
-        return self.post_mapper.users_to_user_gets(users)
+        return self.post_mapper.posts_to_post_gets(posts)
 
     def get(self, post_id):
-        user = self.post_repos.get(post_id)
-        if user is None:
+        post = self.post_repos.get(post_id)
+        if post is None:
             raise NotFoundError(POST_NOT_FOUND)
-        return self.post_mapper.user_to_user_get(user)
+        return self.post_mapper.post_to_post_get(post)
 
     def create(self, create_post_dto):
-        user = self.post_mapper.user_create_to_user(create_post_dto)
-        return self.post_mapper.user_to_user_get(self.post_repos.create(user))
+        post = self.post_mapper.post_create_to_post(create_post_dto)
+        return self.post_mapper.post_to_post_get(self.post_repos.create(post))
 
     def delete(self, post_id):
-        user = self.post_repos.get(post_id)
-        if user:
-            return self.post_mapper.user_to_user_get(self.post_repos.delete(user))
+        post = self.post_repos.get(post_id)
+        if post:
+            return self.post_mapper.post_to_post_get(self.post_repos.delete(post))
         raise NotFoundError(POST_NOT_FOUND)
 
     def update(self, post_id, new_post):
-        user = self.post_repos.get(post_id)
-        if user:
-            return self.post_mapper.user_to_user_get(self.post_repos.update(post_id, new_post))
+        post = self.post_repos.get(post_id)
+        if post:
+            return self.post_mapper.post_to_post_get(self.post_repos.update(post_id, new_post))
         else:
             raise NotFoundError(POST_NOT_FOUND)
+
+    def get_by_user_id(self, user_id):
+        return self.post_mapper.posts_to_post_gets(self.post_repos.get_by_user_id(user_id))
