@@ -1,7 +1,7 @@
 from flask import jsonify
 
 from dtos import UserCreateDto, PostCreateDto
-from error_messages import NAME_AGE_REQUIRED
+from error_messages import CREATE_USER_MISSING_DATA
 from exceptions import MissingDataError
 
 
@@ -16,7 +16,7 @@ class UserJsonSerializer:
         name = data.get('name')
         age = data.get('age')
         if not name or not age:
-            raise MissingDataError(NAME_AGE_REQUIRED)
+            raise MissingDataError(CREATE_USER_MISSING_DATA)
         return UserCreateDto(name, age)
 
 class PostJsonSerializer:
@@ -31,7 +31,7 @@ class PostJsonSerializer:
         content = data.get('content')
         user_id = data.get('user_id')
         if not title or not content or not user_id:
-            raise MissingDataError(NAME_AGE_REQUIRED)
+            raise MissingDataError(CREATE_POST_MISSING_DATA)
         return PostCreateDto(title=title, content=content,user_id=user_id)
 
 
