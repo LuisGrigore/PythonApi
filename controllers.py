@@ -1,9 +1,8 @@
-from flask import jsonify, request
+from flask import request
 
 from exceptions import NotFoundError, MissingDataError
 from extensions import app
 from mappers import UserMapper, PostMapper
-from models import db, Post
 from repos import UserRepos, PostRepos
 from serializers import UserJsonSerializer, ErrorJsonSerializer, PostJsonSerializer
 from services import UserService, PostService
